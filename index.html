@@ -791,7 +791,7 @@ if ('serviceWorker' in navigator) {
 
 // Capture the install prompt event (Chrome/Android/Edge)
 let deferredInstallPrompt = null;
-let isStandalone = false;
+let installButtonShown    = false;
 
 window.addEventListener('beforeinstallprompt', e => {
   e.preventDefault();
@@ -799,59 +799,81 @@ window.addEventListener('beforeinstallprompt', e => {
   showInstallButton('pwa');
 });
 
-// Detect if already installed as standalone app
-window.addEventListener('DOMContentLoaded', () => {
-  isStandalone = window.matchMedia('(display-mode: standalone)').matches
-              || window.navigator.standalone === true;
+window.addEventListener('appinstalled', () => {
+  document.getElementById('install-btn').classList.remove('visible');
+  installButtonShown = false;
+});
 
-  if (isStandalone) {
-    // Running as installed app — hide the install button entirely
-    document.getElementById('install-btn').style.display = 'none';
+window.addEventListener('DOMContentLoaded', () => {
+  // Already running as an installed PWA — hide entirely
+  const isStandalone = window.matchMedia('(display-mode: standalone)').matches
+                    || window.navigator.standalone === true;
+  if (isStandalone) return;
+
+  const ua           = navigator.userAgent;
+  const isIOS        = /iPhone|iPad|iPod/i.test(ua);
+  const isMobileSafari = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS/i.test(ua);
+  const isMobile     = /iPhone|iPad|iPod|Android/i.test(ua);
+
+  if (isMobileSafari) {
+    // iOS Safari: show button that opens the 2-step overlay
+    showInstallButton('ios');
     return;
   }
 
-  const ua = navigator.userAgent;
-  const isIOS    = /iPhone|iPad|iPod/i.test(ua);
-  const isSafari = /Safari/i.test(ua) && !/Chrome|CriOS|FxiOS/i.test(ua);
-  const isChromeiOS = /CriOS/i.test(ua);
-
-  if (isIOS && isSafari) {
-    // iOS Safari: show button that opens the overlay instructions
-    showInstallButton('ios');
-  } else if (isIOS && isChromeiOS) {
-    // Chrome on iOS can't install PWAs; don't show anything
-  }
-  // Android/Desktop Chrome: handled by beforeinstallprompt above
-  // If beforeinstallprompt never fires (already installed, not supported, etc.),
-  // the button stays hidden.
+  // For every other browser: wait 800 ms to let beforeinstallprompt fire.
+  // If it didn't (Firefox, Safari desktop, already-installed Chrome, etc.),
+  // fall back to a download button.
+  setTimeout(() => {
+    if (!installButtonShown) {
+      showInstallButton(isMobile ? 'ios' : 'download');
+    }
+  }, 800);
 });
 
 function showInstallButton(type) {
+  if (installButtonShown) return;
   const btn   = document.getElementById('install-btn');
   const label = document.getElementById('install-btn-label');
-  const ua    = navigator.userAgent;
-  const isMobile = /iPhone|iPad|iPod|Android/i.test(ua);
 
   if (type === 'ios') {
     label.textContent = 'Add to Home Screen';
   } else if (type === 'pwa') {
-    label.textContent = isMobile ? 'Add to Home Screen' : 'Install App';
+    label.textContent = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent)
+                      ? 'Add to Home Screen' : 'Install App';
+  } else if (type === 'download') {
+    label.textContent = 'Download App';
   }
 
   btn.classList.add('visible');
+  installButtonShown = true;
 }
 
 async function handleInstall() {
   if (deferredInstallPrompt) {
-    // Chrome / Android / Desktop: trigger native install prompt
+    // Chrome / Android / Edge: trigger native install prompt
     const result = await deferredInstallPrompt.prompt();
     if (result?.outcome === 'accepted') {
       deferredInstallPrompt = null;
       document.getElementById('install-btn').classList.remove('visible');
+      installButtonShown = false;
     }
-  } else {
+    return;
+  }
+
+  const ua           = navigator.userAgent;
+  const isIOS        = /iPhone|iPad|iPod/i.test(ua);
+  const isMobileSafari = isIOS && /Safari/i.test(ua) && !/CriOS|FxiOS/i.test(ua);
+
+  if (isMobileSafari) {
     // iOS Safari: show the 2-step overlay
     document.getElementById('ios-overlay').classList.add('open');
+  } else {
+    // Desktop Firefox / Safari / unsupported: download the standalone file
+    const a = document.createElement('a');
+    a.href     = './chore-tracker.html';
+    a.download = 'chore-tracker.html';
+    a.click();
   }
 }
 
@@ -913,8 +935,10 @@ function makeDefaultState() {
         id: 'freq_monthly', name: 'Monthly', color: '#8a9e7e',
         intervalDays: 30, lastReset: todayStr(),
         chores: [
-          { id: 'c_m1', text: 'Clean car',      done: false },
-          { id: 'c_m2', text: 'Clean out fridge',   done: false },
+          { id: 'c_m1', text: 'Wash sheets',      done: false },
+          { id: 'c_m2', text: 'Clean bathroom',   done: false },
+          { id: 'c_m3', text: 'Vacuum',           done: false },
+          { id: 'c_m4', text: 'Wipe out fridge',  done: false },
         ],
       },
       {
@@ -923,7 +947,8 @@ function makeDefaultState() {
         chores: [
           { id: 'c_w1', text: 'Sweep / mop floors', done: false },
           { id: 'c_w2', text: 'Take out trash',      done: false },
-          { id: 'c_w3', text: 'Do laundry',       done: false },
+          { id: 'c_w3', text: 'Wipe counters',       done: false },
+          { id: 'c_w4', text: 'Do laundry',          done: false },
         ],
       },
     ],

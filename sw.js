@@ -1,6 +1,6 @@
 // Service Worker — caches all app assets for offline use.
 // Bump CACHE_VERSION when you deploy updates; the old cache is cleaned up automatically.
-const CACHE_VERSION = 'chore-tracker-v1';
+const CACHE_VERSION = 'chore-tracker-v2';
 const ASSETS = [
   './',
   './index.html',
