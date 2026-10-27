@@ -611,29 +611,6 @@
     }
     .color-swatch.selected { border-color: var(--ink); transform: scale(1.15); }
 
-    /* ─── Welcome modal ──────────────────────────────────── */
-    #welcome-modal .modal { text-align: center; }
-    #welcome-modal h2 { font-size: 1.6rem; margin-bottom: .5rem; }
-    #welcome-modal .modal > p { text-align: left; }
-    #welcome-modal input { text-align: center; font-size: 1.05rem; }
-    .welcome-emoji-row {
-      display: flex; gap: .4rem; flex-wrap: wrap;
-      justify-content: center; margin-top: .5rem;
-    }
-    .welcome-emoji-btn {
-      font-size: 1.6rem;
-      width: 3rem; height: 3rem;
-      border-radius: 10px;
-      border: 2.5px solid transparent;
-      background: var(--cream);
-      cursor: pointer;
-      display: flex; align-items: center; justify-content: center;
-      transition: transform .12s, border-color .15s, background .15s;
-      padding: 0; line-height: 1;
-      -webkit-tap-highlight-color: transparent;
-    }
-    .welcome-emoji-btn:hover { background: #ebe4d6; transform: scale(1.18); }
-    .welcome-emoji-btn.selected { border-color: var(--brown); background: white; transform: scale(1.18); box-shadow: 0 2px 8px var(--shadow); }
 
     /* ─── Responsive ─────────────────────────────────────── */
 
@@ -687,25 +664,6 @@
   </div>
 </div>
 
-<!-- ─── Welcome modal (first-run) ── -->
-<div class="modal-overlay open" id="welcome-modal">
-  <div class="modal">
-    <h2>👋 Welcome!</h2>
-    <p>Give your chore tracker a name — this is just for you.</p>
-    <div class="form-field" style="margin-top:1rem">
-      <label>Your name</label>
-      <input type="text" id="welcome-name" placeholder="e.g. Jordan" autocomplete="off">
-    </div>
-    <div class="form-field">
-      <label>Pick an emoji</label>
-      <div class="welcome-emoji-row" id="welcome-emoji-row"></div>
-    </div>
-    <div class="modal-actions" style="justify-content:center;margin-top:.75rem">
-      <button class="btn-primary" onclick="saveWelcome()">Get Started →</button>
-    </div>
-  </div>
-</div>
-
 <!-- ─── Add Frequency Modal ── -->
 <div class="modal-overlay" id="modal">
   <div class="modal">
@@ -743,7 +701,7 @@
 
 <header>
   <h1 id="app-title">Chore Tracker</h1>
-  <p id="app-subtitle">your personal chore tracker</p>
+  <p>your personal chore tracker</p>
 
   <!-- Install button — hidden until JS determines the right action -->
   <button id="install-btn" onclick="handleInstall()" aria-label="Install app">
@@ -1058,10 +1016,6 @@ function addFrequency({ name, intervalDays, color }) {
 
 function renderAll() {
   autoReset();
-  if (state.name) {
-    document.getElementById('app-subtitle').textContent =
-      (state.emoji || '👤') + ' ' + state.name + "'s chore tracker";
-  }
 
   const container = document.getElementById('columns');
   container.innerHTML = '';
@@ -1370,53 +1324,10 @@ document.getElementById('freq-name').addEventListener('keydown', e => {
 });
 
 // ═══════════════════════════════════════════════════
-//  WELCOME MODAL
-// ═══════════════════════════════════════════════════
-
-let welcomeEmoji = '👤';
-
-function buildWelcomeEmojiPicker() {
-  const row = document.getElementById('welcome-emoji-row');
-  row.innerHTML = '';
-  EMOJIS.forEach(emoji => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'welcome-emoji-btn' + (emoji === welcomeEmoji ? ' selected' : '');
-    btn.textContent = emoji;
-    btn.onclick = () => {
-      welcomeEmoji = emoji;
-      row.querySelectorAll('.welcome-emoji-btn').forEach(b => b.classList.remove('selected'));
-      btn.classList.add('selected');
-    };
-    row.appendChild(btn);
-  });
-}
-
-function saveWelcome() {
-  const name = document.getElementById('welcome-name').value.trim();
-  if (!name) { document.getElementById('welcome-name').focus(); return; }
-  state.name  = name;
-  state.emoji = welcomeEmoji;
-  saveState();
-  document.getElementById('welcome-modal').classList.remove('open');
-  renderAll();
-}
-
-document.getElementById('welcome-name').addEventListener('keydown', e => {
-  if (e.key === 'Enter') saveWelcome();
-});
-
-// ═══════════════════════════════════════════════════
 //  BOOT
 // ═══════════════════════════════════════════════════
 
 state = loadState();
-buildWelcomeEmojiPicker();
-
-if (state.name) {
-  document.getElementById('welcome-modal').classList.remove('open');
-}
-
 renderAll();
 </script>
 </body>
