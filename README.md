@@ -2,7 +2,7 @@
 
 A simple, beautiful personal chore tracker that lives on your phone or computer. No account, no subscription — just download and use.
 
-<img width="1555" height="1725" alt="chore-tracker" src="https://github.com/user-attachments/assets/433fac98-60d7-4dbc-ad84-93befa9bad5d" />
+<img width="596" height="694" alt="chores-tracker" src="https://github.com/user-attachments/assets/dfe609aa-0d22-460f-a965-84f5567fa227" />
 
 ## Features
 
